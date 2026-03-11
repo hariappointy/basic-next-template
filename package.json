@@ -14,8 +14,6 @@
     "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@flue/cli": "^0.0.49",
-    "@flue/client": "^0.0.31",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
