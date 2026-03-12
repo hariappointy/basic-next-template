@@ -1,65 +1,121 @@
-import Image from "next/image";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+import { loginAction } from "@/app/actions/authActions";
+import { APP_NAME } from "@/config/constants";
+import { getCurrentUser } from "@/lib/auth";
+
+interface HomePageProps {
+  searchParams: Promise<{
+    error?: string;
+    redirect?: string;
+  }>;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const currentUser = await getCurrentUser();
+
+  if (currentUser) {
+    redirect("/dashboard");
+  }
+
+  const params = await searchParams;
+  const error = params.error === "invalid_credentials";
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="relative min-h-screen overflow-hidden px-4 py-8">
+      <div className="mx-auto flex min-h-[92vh] w-full max-w-7xl flex-col gap-6 lg:flex-row">
+        <section className="panel-strong flex flex-1 flex-col justify-between rounded-[2rem] p-8 lg:p-12">
+          <div>
+            <div className="inline-flex rounded-full border border-teal-300/20 bg-teal-300/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-teal-200">
+              Productivity Intelligence
+            </div>
+            <h1 className="mt-8 max-w-2xl font-display text-5xl font-semibold leading-tight text-white lg:text-6xl">
+              {APP_NAME} gives operations teams a live view into output, engagement, and delivery
+              risk.
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+              Review employee trends, surface weekly momentum shifts, and focus managers on the
+              teams that need intervention before performance starts slipping.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              ["89", "Average team productivity"],
+              ["32h", "Weekly focus time tracked"],
+              ["3", "People flagged for support"],
+            ].map(([value, label]) => (
+              <article key={label} className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                <div className="font-display text-4xl font-semibold text-white">{value}</div>
+                <div className="mt-2 text-sm text-slate-400">{label}</div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="panel flex w-full max-w-xl flex-col justify-between rounded-[2rem] p-8">
+          <div>
+            <p className="text-sm uppercase tracking-[0.3em] text-amber-200">Secure sign in</p>
+            <h2 className="mt-4 font-display text-3xl font-semibold text-white">
+              Access the TeamPulse workspace
+            </h2>
+            <p className="mt-2 text-sm leading-7 text-slate-300">
+              Use the demo workspace credentials to inspect the dashboard, employee analytics, and
+              admin settings.
+            </p>
+          </div>
+
+          <form action={loginAction} className="mt-8 space-y-5">
+            <input name="redirectTo" type="hidden" value={params.redirect ?? "/dashboard"} />
+            <label className="block">
+              <span className="mb-2 block text-sm text-slate-300">Work email</span>
+              <input
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-teal-300/40"
+                defaultValue="admin@teampulse.dev"
+                name="email"
+                placeholder="name@company.com"
+                type="email"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-sm text-slate-300">Password</span>
+              <input
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-teal-300/40"
+                defaultValue="teampulse123"
+                name="password"
+                placeholder="Minimum 8 characters"
+                type="password"
+              />
+            </label>
+
+            {error ? (
+              <div className="rounded-2xl border border-rose-300/20 bg-rose-300/10 px-4 py-3 text-sm text-rose-100">
+                The email or password was not recognized.
+              </div>
+            ) : null}
+
+            <button
+              className="w-full rounded-2xl bg-teal-300 px-4 py-3 font-medium text-slate-950 transition hover:bg-teal-200"
+              type="submit"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+              Open dashboard
+            </button>
+          </form>
+
+          <div className="mt-8 space-y-3 rounded-3xl border border-white/10 bg-slate-950/25 p-5 text-sm text-slate-300">
+            <p>Demo credentials</p>
+            <p className="font-mono text-white">admin@teampulse.dev / teampulse123</p>
+            <p>
+              Need a guided tour? Start with the{" "}
+              <Link className="text-teal-200 underline decoration-white/10 underline-offset-4" href="/dashboard">
+                dashboard overview
+              </Link>{" "}
+              after signing in.
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }
