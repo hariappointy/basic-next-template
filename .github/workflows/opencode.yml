@@ -29,3 +29,7 @@ jobs:
           model: openrouter/google/gemini-3.1-pro-preview
           # share: true
           # # github_token: xxxx
+
+      - name: Show OpenCode Stats
+        if: ${{ always() }}
+        run: opencode stats

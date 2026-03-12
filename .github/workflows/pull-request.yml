@@ -10,8 +10,8 @@ jobs:
     permissions:
       id-token: write
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -25,3 +25,7 @@ jobs:
           use_github_token: true
           prompt: |
             Review this pull request: use code-review skill.
+
+      - name: Show OpenCode Stats
+        if: ${{ always() }}
+        run: opencode stats
