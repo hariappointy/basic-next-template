@@ -1,7 +1,6 @@
 ---
+name: code-review
 description: Code review a pull request
-agent: build
-model: openrouter/z-ai/glm-4.7
 ---
 
 Provide a code review for the given pull request.
