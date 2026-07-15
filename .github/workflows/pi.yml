@@ -1,0 +1,101 @@
+name: Pi Agent
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  pi:
+    if: startsWith(github.event.comment.body, '@pi ')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      PI_BASE_URL: ${{ secrets.PI_BASE_URL }}
+      PI_API_KEY: ${{ secrets.PI_API_KEY }}
+      PI_SKIP_VERSION_CHECK: "1"
+      PI_TELEMETRY: "0"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Pi
+        run: npm install --global --ignore-scripts @earendil-works/pi-coding-agent
+
+      - name: Configure Luna model
+        run: |
+          mkdir -p "$HOME/.pi/agent"
+          cat > "$HOME/.pi/agent/models.json" <<'JSON'
+          {
+            "providers": {
+              "cli-proxy": {
+                "baseUrl": "$PI_BASE_URL",
+                "api": "openai-responses",
+                "apiKey": "$PI_API_KEY",
+                "models": [
+                  {
+                    "id": "gpt-5.6-luna",
+                    "name": "GPT-5.6 Luna",
+                    "reasoning": true,
+                    "thinkingLevelMap": {
+                      "off": "none",
+                      "xhigh": "xhigh",
+                      "max": "max"
+                    },
+                    "input": ["text", "image"],
+                    "contextWindow": 372000,
+                    "maxTokens": 128000,
+                    "cost": {
+                      "input": 1,
+                      "output": 6,
+                      "cacheRead": 0.1,
+                      "cacheWrite": 1.25,
+                      "tiers": [
+                        {
+                          "inputTokensAbove": 272000,
+                          "input": 2,
+                          "output": 9,
+                          "cacheRead": 0.2,
+                          "cacheWrite": 2.5
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+          JSON
+
+      - name: Run Pi
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPOSITORY: ${{ github.repository }}
+          PI_GITHUB_INSTRUCTIONS: |
+            You are running inside GitHub Actions for repository $REPOSITORY.
+            The triggering issue or pull request number is $ISSUE_NUMBER.
+            Use the authenticated `gh` CLI whenever you need to interact with GitHub.
+            Before finishing, post your final user-facing response as exactly one comment by running:
+            `gh issue comment "$ISSUE_NUMBER" --repo "$REPOSITORY" --body-file <file>`.
+            Write the complete Markdown response to that file first. Do not rely on stdout as the response.
+            If you create images or videos, upload or commit them somewhere accessible, then include their Markdown links in the comment.
+        run: |
+          PROMPT="${COMMENT_BODY#@pi }"
+          pi --print --no-session --approve \
+            --provider cli-proxy \
+            --model gpt-5.6-luna \
+            --append-system-prompt "$PI_GITHUB_INSTRUCTIONS" \
+            "$PROMPT"
